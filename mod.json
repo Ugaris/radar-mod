@@ -1,0 +1,28 @@
+{
+  "name": "Radar & Nameplates",
+  "version": "1.0.0",
+  "description": "Combat awareness: health/shield bars and level badges over characters, a players-in-view list, and an alert with a ping when another player enters your view.",
+  "author": "Ugaris Team",
+  "authorUrl": "https://github.com/Ugaris",
+  "type": "dll",
+  "files": [
+    {
+      "name": "bmod.dll",
+      "path": "https://github.com/Ugaris/radar-mod/releases/download/v1.0.0/bmod.dll",
+      "platform": "windows"
+    },
+    {
+      "name": "bmod.dylib",
+      "path": "https://github.com/Ugaris/radar-mod/releases/download/v1.0.0/bmod.dylib",
+      "platform": "macos"
+    },
+    {
+      "name": "bmod.so",
+      "path": "https://github.com/Ugaris/radar-mod/releases/download/v1.0.0/bmod.so",
+      "platform": "linux"
+    }
+  ],
+  "tags": ["ui", "pvp", "awareness", "nameplates", "radar"],
+  "homepage": "https://github.com/Ugaris/radar-mod",
+  "branch": "main"
+}
