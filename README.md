@@ -28,7 +28,8 @@ A native client mod for [Ugaris](https://ugaris.com): combat awareness.
 | `#radar alert` | Toggle enter-view alerts |
 | `#radar sound` | Toggle the alert ping |
 
-Settings persist in `<client config dir>/radar_mod.cfg`.
+The list panel can be dragged anywhere on the screen; its position is
+remembered. Settings persist in `<client config dir>/radar_mod.cfg`.
 
 ## Notes
 

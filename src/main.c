@@ -74,6 +74,11 @@ static int s_list = 0;   /* see the is-a-player note above */
 static int s_alert = 0;
 static int s_sound = 1;
 
+/* the list panel is draggable: offset (persisted) + last-drawn rect */
+static int s_off_x, s_off_y;
+static int s_ls_x0, s_ls_y0, s_ls_x1, s_ls_y1;
+static int s_drag, s_drag_mx, s_drag_my;
+
 static unsigned int s_last_seen[MAXCHARS];
 static unsigned int s_first_sight[MAXCHARS]; /* pending alert: waiting for the name */
 
@@ -145,8 +150,8 @@ static void save_config(void)
     snprintf(path, sizeof(path), "%sradar_mod.cfg", dir && *dir ? dir : "");
     f = fopen(path, "w");
     if (!f) return;
-    fprintf(f, "bars=%d\nfull=%d\nlevels=%d\nlist=%d\nalert=%d\nsound=%d\n",
-            s_bars, s_hide_full, s_levels, s_list, s_alert, s_sound);
+    fprintf(f, "bars=%d\nfull=%d\nlevels=%d\nlist=%d\nalert=%d\nsound=%d\noffx=%d\noffy=%d\n",
+            s_bars, s_hide_full, s_levels, s_list, s_alert, s_sound, s_off_x, s_off_y);
     fclose(f);
 }
 
@@ -167,6 +172,8 @@ static void load_config(void)
         else if (!strncmp(line, "list=", 5)) s_list = v;
         else if (!strncmp(line, "alert=", 6)) s_alert = v;
         else if (!strncmp(line, "sound=", 6)) s_sound = v;
+        else if (!strncmp(line, "offx=", 5)) s_off_x = v;
+        else if (!strncmp(line, "offy=", 5)) s_off_y = v;
     }
     fclose(f);
 }
@@ -269,9 +276,15 @@ static void draw_char_overlay(const struct seen_char *c)
 static void draw_list(const struct seen_char *chars, int n)
 {
     int players = 0, shown = 0, i;
-    int x1 = dotx(DOT_MBR) - 10;
-    int y = doty(DOT_MTL) + 26;
+    int x1 = dotx(DOT_MBR) - 10 + s_off_x;
+    int y = doty(DOT_MTL) + 26 + s_off_y;
     int w = 0, rows;
+
+    s_ls_x0 = s_ls_x1 = 0;
+    if (x1 < dotx(DOT_MTL) + 140) x1 = dotx(DOT_MTL) + 140;
+    if (x1 > dotx(DOT_MBR) - 4) x1 = dotx(DOT_MBR) - 4;
+    if (y < doty(DOT_MTL) + 4) y = doty(DOT_MTL) + 4;
+    if (y > doty(DOT_MBR) - 40) y = doty(DOT_MBR) - 40;
     char buf[128];
     unsigned char own_clan = 0;
 
@@ -297,8 +310,13 @@ static void draw_list(const struct seen_char *chars, int n)
     w += 20;
     if (w < 120) w = 120;
 
-    render_rounded_rect_filled_alpha(x1 - w, y - 4, x1, y + 14 + rows * 13 + (players > rows ? 13 : 0), 6, C_BG, 205);
-    render_rounded_rect_alpha(x1 - w, y - 4, x1, y + 14 + rows * 13 + (players > rows ? 13 : 0), 6, C_GOLD2, 120);
+    s_ls_x0 = x1 - w;
+    s_ls_y0 = y - 4;
+    s_ls_x1 = x1;
+    s_ls_y1 = y + 14 + rows * 13 + (players > rows ? 13 : 0);
+
+    render_rounded_rect_filled_alpha(x1 - w, y - 4, x1, s_ls_y1, 6, C_BG, 205);
+    render_rounded_rect_alpha(x1 - w, y - 4, x1, s_ls_y1, 6, C_GOLD2, 120);
     snprintf(buf, sizeof(buf), "players in view: %d", players);
     render_text(x1 - w + 8, y, C_GOLD, RENDER_TEXT_SMALL, buf);
     y += 14;
@@ -414,11 +432,51 @@ DLL_EXPORT void amod_frame(void)
     if (!s_ingame) return;
     if (!s_bars && !s_levels && !s_list) return;
 
+    s_ls_x0 = s_ls_x1 = 0;
     n = scan_chars(chars, 128);
     if (s_bars || s_levels) {
         for (i = 0; i < n; i++) draw_char_overlay(&chars[i]);
     }
     if (s_list) draw_list(chars, n);
+}
+
+/* The list panel is draggable: grab it anywhere, drop it anywhere. */
+
+static int inside_list(int x, int y)
+{
+    return s_ls_x1 > s_ls_x0 &&
+           x >= s_ls_x0 && x <= s_ls_x1 && y >= s_ls_y0 && y <= s_ls_y1;
+}
+
+DLL_EXPORT void amod_mouse_move(int x, int y)
+{
+    if (s_drag) {
+        s_off_x += x - s_drag_mx;
+        s_off_y += y - s_drag_my;
+        s_drag_mx = x;
+        s_drag_my = y;
+    }
+}
+
+DLL_EXPORT int amod_mouse_over(int x, int y)
+{
+    return inside_list(x, y);
+}
+
+DLL_EXPORT int amod_mouse_click(int x, int y, int what)
+{
+    if (what == SDL_MOUM_LDOWN && inside_list(x, y)) {
+        s_drag = 1;
+        s_drag_mx = x;
+        s_drag_my = y;
+        return 1;
+    }
+    if (what == SDL_MOUM_LUP && s_drag) {
+        s_drag = 0;
+        save_config();
+        return 1;
+    }
+    return 0;
 }
 
 static int toggle(int *setting, const char *name)
