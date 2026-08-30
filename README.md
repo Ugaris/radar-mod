@@ -10,10 +10,11 @@ A native client mod for [Ugaris](https://ugaris.com): combat awareness.
   orange/red = above you).
 - **Players in view** — a compact list of players currently on your screen
   with level, distance, and their PK sign; clan mates are tinted green,
-  hostile PKs red.
+  hostile PKs red. *Off by default, see the note below.*
 - **Enter-view alert** — the moment another player walks into your view you
   get a chat line and a soft ping. Players already present at login or after
-  an area change do not alert; only genuine approaches do.
+  an area change do not alert; only genuine approaches do. *Off by default,
+  see the note below.*
 
 ## Commands
 
@@ -31,9 +32,12 @@ Settings persist in `<client config dir>/radar_mod.cfg`.
 
 ## Notes
 
-- Player detection uses the client's own rule (base player sprites) plus the
-  system mod's `amod_is_playersprite`, resolved at runtime — so Ugaris'
-  custom player sprites are recognized when the system mod is present.
+- **Why the list and alerts default to off:** the game's wire protocol has
+  no is-a-player flag — monsters and players share the same character data,
+  and classic monsters live in the same sprite range the player test uses.
+  In monster-dense areas the list and alerts will include some monsters.
+  Turn them on where they shine: arenas, PvP areas, anywhere with few NPCs.
+  A reliable filter needs a small server-side addition.
 - Names can lag a moment behind a character's appearance (the server sends
   them separately); alerts wait briefly for the name before falling back to
   "Someone".

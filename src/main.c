@@ -17,9 +17,7 @@
  *
  * Settings persist in <client config dir>/radar_mod.cfg.
  *
- * Player detection uses the client's own rule (base player sprites) plus
- * the system mod's amod_is_playersprite, resolved at runtime, so Ugaris'
- * custom player sprites are recognized too.
+ * Player detection uses the client's own rule (base player sprites).
  */
 
 #include <stdio.h>
@@ -47,32 +45,18 @@
 #define C_GREEN  IRGB(8, 26, 10)
 #define C_RED    IRGB(28, 8, 6)
 
-/* The client's is-a-player test: base sprites below 120, plus whatever the
- * system mod (amod) recognizes - Ugaris uses custom player sprites in the
- * file-backed range, and amod_is_playersprite() knows them. Resolved at
- * runtime so this mod works with or without the system mod. */
+/* There is no is-a-player flag anywhere in the wire protocol: monsters and
+ * players share the same character data, and even classic monsters (bears
+ * are sprite 12) live in the low sprite range. The best available test is
+ * the base-sprite rule; it treats some classic monsters as players, which
+ * is why the list and the alerts ship disabled by default - enable them
+ * where they shine (arenas, PvP areas, anywhere with few NPCs). A reliable
+ * filter needs one is-player bit from the server. */
 #define PLAYER_SPRITE_MAX 120
-
-typedef int (*is_playersprite_fn)(int sprite);
-static is_playersprite_fn s_is_playersprite;
-
-static void resolve_playersprite_fn(void)
-{
-    void *sym = NULL;
-#ifdef _WIN32
-    HMODULE m = GetModuleHandleA("amod.dll");
-    if (m) sym = (void *)GetProcAddress(m, "amod_is_playersprite");
-#else
-    sym = dlsym(RTLD_DEFAULT, "amod_is_playersprite");
-#endif
-    memcpy(&s_is_playersprite, &sym, sizeof(s_is_playersprite));
-}
 
 static int is_player_sprite(unsigned int csprite)
 {
-    if (csprite < PLAYER_SPRITE_MAX) return 1;
-    if (s_is_playersprite && s_is_playersprite((int)csprite)) return 1;
-    return 0;
+    return csprite < PLAYER_SPRITE_MAX;
 }
 
 /* ---------------------------------------------------------------- state */
@@ -86,8 +70,8 @@ static int s_ping;                   /* sound handle, 0 = unavailable */
 static int s_bars = 1;
 static int s_hide_full = 1;
 static int s_levels = 1;
-static int s_list = 1;
-static int s_alert = 1;
+static int s_list = 0;   /* see the is-a-player note above */
+static int s_alert = 0;
 static int s_sound = 1;
 
 static unsigned int s_last_seen[MAXCHARS];
@@ -398,7 +382,6 @@ DLL_EXPORT void amod_gamestart(void)
     memset(s_last_seen, 0, sizeof(s_last_seen));
     memset(s_first_sight, 0, sizeof(s_first_sight));
     load_config();
-    resolve_playersprite_fn();
     s_ping = sound_load("029_magic.wav");
 }
 
