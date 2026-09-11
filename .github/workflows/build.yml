@@ -17,13 +17,13 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: linux
-            artifact: bmod.so
+            artifact: radar.so
           - os: macos-latest
             platform: macos
-            artifact: bmod.dylib
+            artifact: radar.dylib
           - os: windows-latest
             platform: windows
-            artifact: bmod.dll
+            artifact: radar.dll
 
     runs-on: ${{ matrix.os }}
 
@@ -60,7 +60,7 @@ jobs:
         run: |
           cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build build
-          cp build/bmod.dll bmod.dll
+          cp build/radar.dll radar.dll
 
       - name: Build (macOS)
         if: matrix.platform == 'macos'
@@ -68,14 +68,14 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
           cmake --build build
-          cp build/bmod.dylib bmod.dylib
+          cp build/radar.dylib radar.dylib
 
       - name: Build (Linux)
         if: matrix.platform == 'linux'
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build
-          cp build/bmod.so bmod.so
+          cp build/radar.so radar.so
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -100,7 +100,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/windows/bmod.dll
-            artifacts/macos/bmod.dylib
-            artifacts/linux/bmod.so
+            artifacts/windows/radar.dll
+            artifacts/macos/radar.dylib
+            artifacts/linux/radar.so
           generate_release_notes: true
