@@ -487,6 +487,52 @@ static int toggle(int *setting, const char *name)
     return 1;
 }
 
+/* ---- Options > Mods ------------------------------------------------------
+ * Mirrors #radar; both write the same variables and call save_config(). */
+DLL_EXPORT int amod_options_count(void)
+{
+    return 7;
+}
+
+DLL_EXPORT int amod_option_get(int index, struct amod_option *out)
+{
+    static const struct { const char *label; int *val; } rows[] = {
+        { "Health bars",        &s_bars },
+        { "Hide bars when full", &s_hide_full },
+        { "Level nameplates",   &s_levels },
+        { "Player list",        &s_list },
+        { "Alert on approach",  &s_alert },
+        { "Alert sound",        &s_sound },
+    };
+
+    memset(out, 0, sizeof(*out));
+    if (index == 0) {
+        out->type = AMOD_OPT_HEADER;
+        snprintf(out->label, sizeof(out->label), "Radar & Nameplates");
+        return 1;
+    }
+    index--;
+    if (index < 0 || index >= (int)(sizeof(rows) / sizeof(rows[0]))) return 0;
+    out->type = AMOD_OPT_TOGGLE;
+    out->value = *rows[index].val;
+    snprintf(out->label, sizeof(out->label), "%s", rows[index].label);
+    return 1;
+}
+
+DLL_EXPORT void amod_option_set(int index, int value)
+{
+    switch (index) {
+    case 1: s_bars = value; break;
+    case 2: s_hide_full = value; break;
+    case 3: s_levels = value; break;
+    case 4: s_list = value; break;
+    case 5: s_alert = value; break;
+    case 6: s_sound = value; break;
+    default: return;
+    }
+    save_config();
+}
+
 DLL_EXPORT int amod_client_cmd(const char *buf)
 {
     if (strncmp(buf, "#radar", 6)) return 0;
