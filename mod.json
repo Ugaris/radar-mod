@@ -7,22 +7,23 @@
   "type": "dll",
   "files": [
     {
-      "name": "bmod.dll",
+      "name": "radar.dll",
       "path": "https://github.com/Ugaris/radar-mod/releases/download/v1.1.0/bmod.dll",
       "platform": "windows"
     },
     {
-      "name": "bmod.dylib",
+      "name": "radar.dylib",
       "path": "https://github.com/Ugaris/radar-mod/releases/download/v1.1.0/bmod.dylib",
       "platform": "macos"
     },
     {
-      "name": "bmod.so",
+      "name": "radar.so",
       "path": "https://github.com/Ugaris/radar-mod/releases/download/v1.1.0/bmod.so",
       "platform": "linux"
     }
   ],
   "tags": ["ui", "pvp", "awareness", "nameplates", "radar"],
+  "entry": "radar",
   "homepage": "https://github.com/Ugaris/radar-mod",
   "branch": "main"
 }

@@ -4,7 +4,7 @@ project(ugaris-radar-mod C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(MOD_OUTPUT_NAME "bmod")
+set(MOD_OUTPUT_NAME "radar")
 
 add_library(${MOD_OUTPUT_NAME} SHARED
     src/main.c
